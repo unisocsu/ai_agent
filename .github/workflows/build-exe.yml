@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -49,3 +52,15 @@ jobs:
         with:
           name: WindowsAIAgent-win-x64-zip
           path: WindowsAIAgent-win-x64.zip
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v1.0.${{ github.run_number }}"
+          gh release create $tag `
+            "publish/WindowsAIAgent.exe" `
+            "WindowsAIAgent-win-x64.zip" `
+            --title "Windows AI Agent $tag" `
+            --generate-notes
