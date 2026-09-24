@@ -2,16 +2,19 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using System.Text.Json;
 using WindowsAIAgent.AI;
+using WindowsAIAgent.Browser;
 
 namespace WindowsAIAgent;
 
 public sealed class MainWindow : Form
 {
     private readonly WebView2 webView = new();
-    private readonly Agent.AgentEngine agent = new();
+    private readonly BrowserService browser = new();
+    private readonly Agent.AgentEngine agent;
 
     public MainWindow()
     {
+        agent = new Agent.AgentEngine(browser);
         Text = "Windows AI Agent";
         Width = 1200;
         Height = 800;
