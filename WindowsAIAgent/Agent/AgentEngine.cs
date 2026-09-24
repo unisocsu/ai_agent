@@ -1,19 +1,27 @@
 using System.Text.Json;
 using WindowsAIAgent.AI;
+using WindowsAIAgent.Browser;
 using WindowsAIAgent.Tools;
 
 namespace WindowsAIAgent.Agent;
 
 public sealed class AgentEngine
 {
-    private readonly List<IAgentTool> tools = new() { new FileTool(), new WriteFileTool(), new ProcessTool() };
+    private readonly List<IAgentTool> tools;
     private readonly List<AIMessage> history = new();
     private readonly string workspace;
 
-    public AgentEngine()
+    public AgentEngine(BrowserService browser)
     {
         workspace = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "WindowsAIAgent", "workspace");
         Directory.CreateDirectory(workspace);
+        tools = new List<IAgentTool>
+        {
+            new FileTool(),
+            new WriteFileTool(),
+            new ProcessTool(),
+            new BrowserTool(browser)
+        };
     }
 
     public IReadOnlyList<AIToolDefinition> Definitions =>
@@ -42,10 +50,13 @@ public sealed class AgentEngine
 
             foreach (var call in response.ToolCalls)
             {
-                if (!tools.Any(t => t.Name.Equals(call.Name, StringComparison.OrdinalIgnoreCase)))
+                var tool = tools.FirstOrDefault(t => t.Name.Equals(call.Name, StringComparison.OrdinalIgnoreCase));
+                if (tool is null)
+                {
+                    history.Add(new AIMessage("tool", $"Tool {call.Name} not found."));
                     continue;
+                }
 
-                var tool = tools.First(t => t.Name.Equals(call.Name, StringComparison.OrdinalIgnoreCase));
                 using var args = JsonDocument.Parse(call.ArgumentsJson);
                 var result = await tool.ExecuteAsync(args.RootElement, ct);
                 history.Add(new AIMessage("tool", $"Tool {call.Name} result:\n{result}"));
