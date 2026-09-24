@@ -30,8 +30,20 @@ public sealed class MainWindow : Form
         var env = await CoreWebView2Environment.CreateAsync(null, userData);
         await webView.EnsureCoreWebView2Async(env);
         webView.CoreWebView2.WebMessageReceived += WebMessageReceived;
-        webView.CoreWebView2.SetVirtualHostNameToFolderMapping("agent.local", Path.Combine(AppContext.BaseDirectory, "Web"), CoreWebView2HostResourceAccessKind.Allow);
-        webView.Source = new Uri("https://agent.local/index.html");
+        var webRoot = Path.Combine(AppContext.BaseDirectory, "Web");
+        var indexPath = Path.Combine(webRoot, "index.html");
+        if (!File.Exists(indexPath))
+            throw new FileNotFoundException("Web UI was not included in the published package.", indexPath);
+
+        webView.CoreWebView2.NavigationCompleted += (_, args) =>
+        {
+            if (!args.IsSuccess)
+            {
+                webView.CoreWebView2.NavigateToString($@"<html><body style='font-family:Segoe UI;padding:40px'><h2>Windows AI Agent</h2><p>Failed to load the interface: {args.WebErrorStatus}</p><p>{System.Net.WebUtility.HtmlEncode(indexPath)}</p></body></html>");
+            }
+        };
+
+        webView.Source = new Uri(indexPath);
     }
 
     private async void WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
