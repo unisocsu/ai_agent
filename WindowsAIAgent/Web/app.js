@@ -1,0 +1,4 @@
+const chat=document.getElementById("chat");
+function add(text,who){const d=document.createElement("div");d.className="msg "+who;d.textContent=text;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
+window.chrome.webview.addEventListener("message",e=>{const r=e.data;if(r.error)add("Error: "+r.error,"error");else add(r.result||"","agent");});
+document.getElementById("form").addEventListener("submit",e=>{e.preventDefault();const message=input.value.trim();if(!message)return;add(message,"user");input.value="";window.chrome.webview.postMessage({action:"chat",message,provider:provider.value,apiKey:apiKey.value,model:model.value});});
