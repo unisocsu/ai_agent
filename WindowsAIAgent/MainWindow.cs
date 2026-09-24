@@ -38,7 +38,7 @@ public sealed class MainWindow : Form
     {
         try
         {
-            var request = JsonSerializer.Deserialize<WebRequest>(e.WebMessageAsJson());
+            var request = JsonSerializer.Deserialize<WebRequest>(e.WebMessageAsJson);
             if (request is null) return;
 
             if (request.Action == "chat")
