@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Windows AI Agent</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<header><h1>Windows AI Agent</h1><span>Agent</span></header>
+<section class="settings">
+<select id="provider"><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="grok">Grok</option></select>
+<input id="apiKey" type="password" placeholder="API key">
+<input id="model" placeholder="Model (optional)">
+</section>
+<section id="chat"></section>
+<form id="form"><input id="input" autocomplete="off" placeholder="Tell the agent what to do..."><button>Send</button></form>
+</main><script src="app.js"></script></body></html>
