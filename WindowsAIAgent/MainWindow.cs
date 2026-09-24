@@ -1,5 +1,6 @@
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
+using System.Reflection;
 using System.Text.Json;
 using WindowsAIAgent.AI;
 using WindowsAIAgent.Browser;
@@ -26,24 +27,66 @@ public sealed class MainWindow : Form
 
     private async void MainWindow_Load(object? sender, EventArgs e)
     {
-        var userData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WindowsAIAgent", "WebView2");
-        var env = await CoreWebView2Environment.CreateAsync(null, userData);
-        await webView.EnsureCoreWebView2Async(env);
-        webView.CoreWebView2.WebMessageReceived += WebMessageReceived;
-        var webRoot = Path.Combine(AppContext.BaseDirectory, "Web");
-        var indexPath = Path.Combine(webRoot, "index.html");
-        if (!File.Exists(indexPath))
-            throw new FileNotFoundException("Web UI was not included in the published package.", indexPath);
-
-        webView.CoreWebView2.NavigationCompleted += (_, args) =>
+        try
         {
-            if (!args.IsSuccess)
-            {
-                webView.CoreWebView2.NavigateToString($@"<html><body style='font-family:Segoe UI;padding:40px'><h2>Windows AI Agent</h2><p>Failed to load the interface: {args.WebErrorStatus}</p><p>{System.Net.WebUtility.HtmlEncode(indexPath)}</p></body></html>");
-            }
-        };
+            var userData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "WindowsAIAgent", "WebView2");
 
-        webView.Source = new Uri(indexPath);
+            var env = await CoreWebView2Environment.CreateAsync(null, userData);
+            await webView.EnsureCoreWebView2Async(env);
+            webView.CoreWebView2.WebMessageReceived += WebMessageReceived;
+            webView.CoreWebView2.NavigationCompleted += (_, args) =>
+            {
+                if (!args.IsSuccess)
+                    ShowError($"WebView2 failed to load the interface: {args.WebErrorStatus}");
+            };
+
+            await LoadEmbeddedUiAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.ToString());
+        }
+    }
+
+    private async Task LoadEmbeddedUiAsync()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        string Read(string suffix)
+        {
+            var name = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (name is null)
+                throw new FileNotFoundException($"Embedded UI resource not found: {suffix}");
+            using var stream = assembly.GetManifestResourceStream(name)!;
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        var html = Read(".Web.index.html");
+        var css = Read(".Web.style.css");
+        var js = Read(".Web.app.js");
+
+        html = html.Replace(
+            "<link rel="stylesheet" href="style.css">",
+            $"<style>{css}</style>",
+            StringComparison.OrdinalIgnoreCase);
+
+        html = html.Replace(
+            "<script src="app.js"></script>",
+            $"<script>{js}</script>",
+            StringComparison.OrdinalIgnoreCase);
+
+        webView.NavigateToString(html);
+        await Task.CompletedTask;
+    }
+
+    private void ShowError(string message)
+    {
+        if (webView.IsDisposed) return;
+        var safe = System.Net.WebUtility.HtmlEncode(message);
+        webView.NavigateToString($@"<!doctype html><html><body style='font-family:Segoe UI;padding:40px'><h2>Windows AI Agent</h2><pre style='white-space:pre-wrap'>{safe}</pre></body></html>");
     }
 
     private async void WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
