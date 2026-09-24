@@ -14,8 +14,8 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3485.44" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\agent.md" Link="agent.md" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\skills\**\*" LinkBase="skills" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\agent.md" Link="agent.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\skills\**\*" LinkBase="skills" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Web\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
