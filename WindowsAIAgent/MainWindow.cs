@@ -93,7 +93,7 @@ public sealed class MainWindow : Form
     {
         try
         {
-            var request = JsonSerializer.Deserialize<WebRequest>(e.WebMessageAsJson);
+            var request = JsonSerializer.Deserialize<WebRequest>(e.WebMessageAsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (request is null) return;
 
             if (request.Action == "chat")
