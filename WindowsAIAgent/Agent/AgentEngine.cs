@@ -59,7 +59,7 @@ public sealed class AgentEngine
 
                 using var args = JsonDocument.Parse(call.ArgumentsJson);
                 var result = await tool.ExecuteAsync(args.RootElement, ct);
-                history.Add(new AIMessage("tool", $"Tool {call.Name} result:\n{result}"));
+                history.Add(new AIMessage("user", $"Tool {call.Name} result:\n{result}"));
             }
         }
 
