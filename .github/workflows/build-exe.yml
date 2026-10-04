@@ -36,6 +36,33 @@ jobs:
           -p:PublishSingleFile=true
           -o publish
 
+      - name: Ensure WebView2 native loader is packaged
+        shell: pwsh
+        run: |
+          $loader = Get-ChildItem "$env:USERPROFILE\\.nuget\\packages\\microsoft.web.webview2" -Filter WebView2Loader.dll -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "\\runtimes\\win-x64\\native\\WebView2Loader\\.dll$" } |
+            Select-Object -First 1
+
+          if (-not $loader) {
+            $loader = Get-ChildItem "$env:USERPROFILE\\.nuget\\packages\\microsoft.web.webview2" -Filter WebView2Loader.dll -Recurse -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match "win-x64" } |
+              Select-Object -First 1
+          }
+
+          if (-not $loader) {
+            throw "WebView2Loader.dll was not found in the restored Microsoft.Web.WebView2 package."
+          }
+
+          Copy-Item $loader.FullName "publish\\WebView2Loader.dll" -Force
+          Write-Host "Packaged WebView2Loader.dll from $($loader.FullName)" 
+
+      - name: Verify publish contents
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "publish\\WindowsAIAgent.exe")) { throw "WindowsAIAgent.exe is missing from publish." }
+          if (-not (Test-Path "publish\\WebView2Loader.dll")) { throw "WebView2Loader.dll is missing from publish." }
+          Get-ChildItem publish | Select-Object Name,Length
+
       - name: Package
         shell: pwsh
         run: Compress-Archive -Path publish/* -DestinationPath WindowsAIAgent-win-x64.zip
