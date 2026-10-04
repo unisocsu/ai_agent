@@ -69,12 +69,12 @@ public sealed class MainWindow : Form
         var js = Read(".Web.app.js");
 
         html = html.Replace(
-            "<link rel="stylesheet" href="style.css">",
+            "<link rel=\"stylesheet\" href=\"style.css\">",
             $"<style>{css}</style>",
             StringComparison.OrdinalIgnoreCase);
 
         html = html.Replace(
-            "<script src="app.js"></script>",
+            "<script src=\"app.js\"></script>",
             $"<script>{js}</script>",
             StringComparison.OrdinalIgnoreCase);
 
